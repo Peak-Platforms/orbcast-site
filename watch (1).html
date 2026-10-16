@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Watch Orbcast Live</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="wrap">
+  <a class="logo" href="/">Orb<span>cast</span></a>
+  <nav><a href="/">Home</a><a href="/#stations">Stations</a><a href="/#report">Report</a></nav>
+</div></header>
+
+<main class="wrap" style="padding-top:28px;padding-bottom:48px">
+  <div class="bar"><span class="live">Live</span><span id="count"></span></div>
+  <div class="player" id="player"><div class="note">Loading…</div></div>
+</main>
+<footer>© Orbcast · A Peak Platforms company</footer>
+
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+<script>
+const C=window.ORBCAST, box=document.getElementById("player"), countEl=document.getElementById("count");
+const id=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2));
+let playing=false;
+
+function overflow(){
+  box.innerHTML='<div class="note"><h2 style="color:#e8ecf4;margin-top:0">The live page is full</h2><p>Keep watching Orbcast live on X.</p><a class="btn" href="'+C.X_URL+'" target="_blank" rel="noopener">Watch on X</a></div>';
+}
+function play(){
+  if(playing)return; playing=true;
+  if(!C.HLS_URL){box.innerHTML='<div class="note">The live stream is not connected yet. Check back soon.</div>';return}
+  box.innerHTML='<video controls autoplay muted playsinline></video>';
+  const v=box.querySelector("video");
+  if(v.canPlayType("application/vnd.apple.mpegurl")){v.src=C.HLS_URL}
+  else if(window.Hls&&Hls.isSupported()){const h=new Hls({lowLatencyMode:true});h.loadSource(C.HLS_URL);h.attachMedia(v)}
+  else{box.innerHTML='<div class="note">Your browser cannot play this stream.</div>'}
+}
+async function beat(){
+  if(!C.VIEWER_COUNT_URL){play();return}
+  try{
+    const r=await fetch(C.VIEWER_COUNT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});
+    const {count}=await r.json();
+    countEl.textContent=Math.min(count,C.VIEWER_CAP)+" watching";
+    // Viewers already playing keep their spot; only new arrivals are sent to X.
+    if(!playing&&count>C.VIEWER_CAP){overflow();return}
+    play();
+  }catch(_){play()}
+}
+beat(); if(C.VIEWER_COUNT_URL)setInterval(beat,20000);
+</script>
+</body>
+</html>

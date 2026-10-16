@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbcast — Live news from around the orb</title>
+<meta name="description" content="Orbcast is a 24/7 live channel fed by reporters around the world. Watch live, request a station feed, or apply to report.">
+<meta property="og:title" content="Orbcast">
+<meta property="og:description" content="A 24/7 live channel fed by reporters around the world.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="wrap">
+  <a class="logo" href="/">Orb<span>cast</span></a>
+  <nav><a href="watch.html">Watch</a><a href="#stations">Stations</a><a href="#report">Report</a></nav>
+</div></header>
+
+<main class="wrap">
+  <div class="hero">
+    <span class="live">Live 24/7</span>
+    <h1>The world, live, from the people on the ground.</h1>
+    <p>Orbcast is a continuous live channel fed by reporters around the globe, available to viewers and to television stations.</p>
+    <a class="btn" href="watch.html">Watch live</a>
+    <a class="btn alt" href="#report">Become a reporter</a>
+  </div>
+
+  <div class="cards">
+    <div class="card"><h3>Watch</h3><p>Tune in to the live channel any time.</p><a href="watch.html">Open the live page →</a></div>
+    <div class="card"><h3>For stations</h3><p>Request a live feed of Orbcast for your station.</p><a href="#stations">Request a feed →</a></div>
+    <div class="card"><h3>For reporters</h3><p>Send live video from where you are. Every reporter is reviewed before going to air.</p><a href="#report">Apply →</a></div>
+  </div>
+
+  <section id="stations">
+    <h2>Request a station feed</h2>
+    <p class="sub">Tell us about your station and we will follow up with delivery details.</p>
+    <form data-type="station">
+      <label>Station name<input name="station" required></label>
+      <label>Call sign / market<input name="market"></label>
+      <label>Your name<input name="name" required></label>
+      <label>Email<input type="email" name="email" required></label>
+      <label>Phone<input type="tel" name="phone"></label>
+      <label>Notes (technical requirements, how you would use the feed)<textarea name="notes"></textarea></label>
+      <button class="btn" type="submit">Send request</button>
+      <div class="msg"></div>
+    </form>
+  </section>
+
+  <section id="report">
+    <h2>Apply to report</h2>
+    <p class="sub">Individuals and organizations are welcome. Applications are reviewed by a person, and nothing airs without approval.</p>
+    <form data-type="reporter">
+      <label>Full name<input name="name" required></label>
+      <label>Email<input type="email" name="email" required></label>
+      <label>Phone<input type="tel" name="phone"></label>
+      <label>Location (city, region, country)<input name="location" required></label>
+      <label>What do you cover?<textarea name="coverage" required></textarea></label>
+      <label>How will you stream?
+        <select name="device"><option>Phone</option><option>Camera + encoder</option><option>Starlink / satellite</option><option>Not sure</option></select>
+      </label>
+      <label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" name="agree" required style="margin-top:4px">
+        <span>I own or have the right to broadcast the footage I send, and I understand it may be reviewed before it airs.</span></label>
+      <button class="btn" type="submit">Submit application</button>
+      <div class="msg"></div>
+    </form>
+  </section>
+</main>
+
+<footer>© Orbcast · A Peak Platforms company</footer>
+
+<script src="config.js"></script>
+<script>
+document.querySelectorAll("form").forEach(f=>{
+  f.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const msg=f.querySelector(".msg"), btn=f.querySelector("button");
+    const data=Object.fromEntries(new FormData(f)); data.type=f.dataset.type;
+    if(!window.ORBCAST.FORM_ENDPOINT){msg.className="msg err";msg.textContent="Form not connected yet. Please try again soon.";return}
+    btn.disabled=true;msg.className="msg";msg.textContent="Sending…";
+    try{
+      const r=await fetch(window.ORBCAST.FORM_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+      if(!r.ok)throw 0;
+      f.reset();msg.className="msg ok";msg.textContent="Thanks, we received it.";
+    }catch(_){msg.className="msg err";msg.textContent="Something went wrong. Please try again."}
+    btn.disabled=false;
+  });
+});
+</script>
+</body>
+</html>
